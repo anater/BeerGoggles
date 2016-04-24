@@ -70,37 +70,7 @@ function splitByLineBreak(text){
 
 	splitText = text.split(regexp);
 	console.log(splitText.length);
-	console.log(splitText);
-}
-
-function splitByLine(text){
-	var bb = {
-			topLeft: {
-				x: text.boundingPoly.vertices[0].x,
-				y: text.boundingPoly.vertices[0].y
-			},
-			topRight: {
-				x: text.boundingPoly.vertices[1].x,
-				y: text.boundingPoly.vertices[1].y
-			},
-			bottomLeft: {
-				x: text.boundingPoly.vertices[2].x,
-				y: text.boundingPoly.vertices[2].y
-			},
-			bottomRight: {
-				x: text.boundingPoly.vertices[3].x,
-				y: text.boundingPoly.vertices[3].y
-			}
-		};
-	bb.width = bb.topRight.x - bb.topLeft.x;
-	bb.height = bb.bottomLeft.y - bb.topLeft.y;
-	
-	var style = 'width: ' + bb.width + 'px;'
-	          + 'height: ' + bb.height + 'px;'
-	          + 'top: ' + bb.topLeft.y + 'px;'
-	          + 'left: ' + bb.topLeft.x + 'px;';
-
-	//box.setAttribute('style',style);
+	return splitText;
 }
 
 function breweryDbSearch(query, callback){
@@ -131,7 +101,7 @@ function breweryDbSearch(query, callback){
 	req.send(null);
 }
 
-function googleVision(){
+function googleVision(imgURI){
 	// TODO: restrict api key to domain when going public
 	var googleApiKey = 'AIzaSyCwu_B1Zs0mBSgBldwAbOVcRtb6PFhDs8c',
 		googleUrl = 'https://vision.googleapis.com/v1/images:annotate?key=' + googleApiKey + "&alt=json",
@@ -146,9 +116,7 @@ function googleVision(){
 		    }
 		   ],
 		   "image": {
-		    "source": {
-		     "gcsImageUri": "gs://beergoggles/menu2.jpg"
-		    }
+		    "content": imgURI
 		   }
 		  }
 		 ]
@@ -164,9 +132,9 @@ function googleVision(){
 			if (googleReq.status === 200) {
 				// assign response to resData as JSON and run through processData()
 				resData = JSON.parse(googleReq.response);
-				localStorage.setItem('googleVision', resData);
-				//console.log(resData);
-				processData(resData);
+				var wholeText = resData.responses[0].textAnnotations[0].description,
+					wholeTextByLine = splitByLineBreak(wholeText);
+				document.getElementById('data').innerHTML = wholeTextByLine;
 			} else {
 				// error out
 				console.error('Error!');

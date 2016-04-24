@@ -16,14 +16,14 @@
 		<label for="img-to-scan">
 			Scan a beer menu: <input type="file" name="img-to-scan" id="imgInput" required>
 		</label>
-		<h3>Data:</h3>
+		<h3>Text from menu:</h3>
 		<p id="data"></p>
-		<h2>
+		<!-- <h2>
 			<span id="resultText">1 beer</span> found:
 		</h2>
 		<ul id="resultList">
 			<li id="resultItemTemp"></li>
-		</ul>
+		</ul> -->
 	</main>
 
 	<script type="text/javascript">
@@ -48,14 +48,12 @@
 		function loadFile(file) {
 		    var reader = new FileReader();
 		    reader.onload = function (evt) {
-		        document.getElementById('data').innerHTML += "file loaded: " + evt.target.result;
+		    	var result = evt.target.result,
+		    		cleanResult = result.replace(/data:image\/jpeg;base64,/, "");
+		    	googleVision(cleanResult.toString());
 		    };
-
 		    reader.readAsDataURL(file); // broken in iOS8 && Safari
 		}
-
-		// gv with the kick off
-		// googleVision();
 	</script>
 </body>
 </html>
