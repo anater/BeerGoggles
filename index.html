@@ -7,7 +7,17 @@
 	<title>Beer Goggles</title>
 	<link rel="stylesheet" href="https://npmcdn.com/tachyons@4.0.0-beta.12/css/tachyons.min.css">
 	<script src="js/levenshtein.js"></script>
-	<script src="js/app.js"></script>
+	<script src="js/site.js"></script>
+	<style type="text/css">
+		.boundingPoly{
+			border: 1px solid red;
+			position: absolute;
+		}
+
+		#preview-container{
+			position: relative;
+		}
+	</style>
 </head>
 <body>
 	<main class="mw7 pa3 center">
@@ -17,6 +27,9 @@
 			Scan a beer menu: <input type="file" name="img-to-scan" id="imgInput" required>
 		</label>
 		<h3>Text from menu:</h3>
+		<div id="preview-container">
+			<img id="file-preview" src="">
+		</div>
 		<p id="data"></p>
 		<!-- <h2>
 			<span id="resultText">1 beer</span> found:
@@ -34,12 +47,11 @@
 			resultItemTemp = document.getElementById('resultItemTemp');
 		// set aside for beer results
 		var beers = [];
-
+		//loadBeerStore();
 		imgInput.addEventListener('change', handleFileSelect, false);
 
 		function handleFileSelect(evt) {
 		    var fileList = evt.target.files;
-		  
 		    for (var i = 0; i < fileList.length; i++) {
 		        loadFile(fileList[i]);
 		    }
@@ -50,9 +62,77 @@
 		    reader.onload = function (evt) {
 		    	var result = evt.target.result,
 		    		cleanResult = result.replace(/data:image\/jpeg;base64,/, "");
-		    	googleVision(cleanResult.toString());
+
+		    	document.getElementById("file-preview").src = result;
+
+		    	googleVision(cleanResult.toString(), function(data){
+		    		var scannedText = data.responses[0].textAnnotations[0].description,
+		    			annotations = data.responses[0].textAnnotations,
+		    			distances = [];
+
+		    		// for (var i = 0; i < annotations.length; i++) {
+		    		// 	var vertices = annotations[i].boundingPoly.vertices,
+		    		// 		description = annotations[i].description
+		    		// 		topLeft = vertices[0],
+		    		// 		topRight = vertices[1],
+		    		// 		bottomRight = vertices[2],
+		    		// 		bottomLeft = vertices[3];
+                    //
+		    		// 	createBoundingPoly(
+		    		// 		topLeft.y,
+		    		// 		topLeft.x,
+		    		// 		topRight.x - topLeft.x,
+		    		// 		bottomLeft.y - topLeft.y,
+		    		// 		description
+		    		// 	);
+                    //
+		    		// 	if(i + 1 < annotations.length){
+			    	// 		var a = annotations[i].boundingPoly.vertices,
+			    	// 			aDesc = annotations[i].description,
+                    //
+			    	// 			b = annotations[i + 1].boundingPoly.vertices,
+			    	// 			bDesc = annotations[i + 1].description,
+                    //
+			    	// 			right = a[1].x,
+			    	// 			left = b[0].x,
+			    	// 			distance = left - right;
+                    //
+			    	// 		if(distance > 0){
+			    	// 			console.log('Distance between ' + aDesc + ' and '+ bDesc + ' is ' + distance);
+			    	// 			distances.push(distance);
+			    	// 		}
+			    	// 	}
+		    		// };
+		    		// // console.log(distances);
+		    		// var total = 0,
+		    		// 	average;
+		    		// for (var i = 0; i < distances.length; i++) {
+		    		// 	total += distances[i]
+		    		// };
+		    		// console.log(total);
+		    		// average = total / distances.length;
+                    //
+		    		// console.log(average);
+
+		    		sessionStorage.setItem('scannedText', scannedText);
+		    		loadBeerStore(findBeersInText);
+		    	});
 		    };
 		    reader.readAsDataURL(file); // broken in iOS8 && Safari
+		}
+
+		function createBoundingPoly(positionTop, positionLeft, width, height, content){
+			var poly = document.createElement('div'),
+				styles = 'top: ' + positionTop + 'px;' +
+			             'left: ' + positionLeft + 'px;' +
+			             'width: ' + width + 'px;' +
+			             'height: ' + height + 'px;';
+
+			poly.classList.add('boundingPoly');
+			poly.dataset.content = content;
+			poly.setAttribute('style', styles);
+
+			document.getElementById('preview-container').appendChild(poly);
 		}
 	</script>
 </body>

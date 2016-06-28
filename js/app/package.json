@@ -1,0 +1,25 @@
+{
+  "name": "beer-goggles",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "brewerydb-node": "^0.0.1"
+  },
+  "devDependencies": {
+    "brewerydb-node": "0.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://anater@github.com/anater/BeerGoggles.git"
+  },
+  "author": "Andrew Nater",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anater/BeerGoggles/issues"
+  },
+  "homepage": "https://github.com/anater/BeerGoggles#readme"
+}

@@ -13,6 +13,62 @@
 	9. return results to UI
 */
 
+function loadBeerStore(callback){
+	var req = new XMLHttpRequest(),
+		beerStore = JSON.parse(localStorage.getItem('beerStore'));
+	req.onreadystatechange = function(){
+		// if request is ready...
+		if (req.readyState === XMLHttpRequest.DONE) {
+			var jsonRes = JSON.parse(req.response);
+			localStorage.setItem('beerStore', req.response);
+			// if we have a callback, run it
+			if(callback !== null || callback !== undefined){
+				callback(jsonRes);
+			}
+		}
+	}
+	// open request, set content type, and send
+	req.open('GET', 'js/beerStore.json', true);
+	req.setRequestHeader('Content-Type', 'application/json');
+	// if there's no beerStore in localStorage, grab the .json
+	// if(beerStore !== null || beerStore !== ""){
+	// 	req.send(null);
+	// }else{
+	// 	// if there was and a callback was passed, run it with the beerStore
+	// 	if(callback !== null || callback !== undefined){
+	// 		callback(beerStore);
+	// 	}
+	// }
+	req.send(null);
+}
+
+function findBeersInText(beerStore){
+	var breweries = beerStore;
+	console.log(breweries);
+	if(breweries !== undefined && breweries.length > 0){
+		for (var i = 0; i < breweries.length; i++) {
+			searchBeers(breweries[i].name, breweries[i].beers);
+		};
+	}
+}
+
+function searchBeers(breweryName, beers){
+	var text = sessionStorage.getItem('scannedText').toUpperCase();
+	for (var i = 0; i < beers.length; i++) {
+		var fullName = breweryName + " " + beers[i].name,
+			testFullName = text.indexOf(fullName.toUpperCase()),
+			testBeerName = text.indexOf(beers[i].name.toUpperCase());
+		if(testBeerName !== -1){
+			console.log('NAME MATCH ON (' + breweryName + ') ' + beers[i].name);
+			console.log(testBeerName);
+		}
+		if(testFullName !== -1){
+			console.log('FULL NAME MATCH ON ' + fullName);
+			console.log(testFullName);
+		}
+	};
+}
+
 function processData(data){
 	console.log(data);
 	var annotations = data.responses[0].textAnnotations,
@@ -69,7 +125,6 @@ function splitByLineBreak(text){
 		matches = [];
 
 	splitText = text.split(regexp);
-	console.log(splitText.length);
 	return splitText;
 }
 
@@ -101,9 +156,35 @@ function breweryDbSearch(query, callback){
 	req.send(null);
 }
 
-function googleVision(imgURI){
+function breweryDbGetBrewery(query, callback){
+	//console.log(query);
+	var key = 'f2f26c4abe60a3a41cf5c9ee27d9da60',
+		req = new XMLHttpRequest(),
+		url = 'https://api.brewerydb.com/v2/brewery/' + query + '/beers?key=' + key + '&format=json',
+		res;
+
+	req.onreadystatechange = function(){
+		// if request is ready...
+		if (req.readyState === XMLHttpRequest.DONE) {
+			// if request has successful status...
+			if (req.status === 200) {
+				res = JSON.parse(req.response);
+				callback(query, res);
+			} else {
+				// error out
+				console.error(req.response);
+			}
+		}
+	}
+	// open request, set content type, and send
+	req.open('GET', url.toString(), true);
+	//req.setRequestHeader('Content-Type', 'application/json');
+	req.send(null);
+}
+
+function googleVision(imgURI, callback){
 	// TODO: restrict api key to domain when going public
-	var googleApiKey = 'AIzaSyCwu_B1Zs0mBSgBldwAbOVcRtb6PFhDs8c',
+	var googleApiKey = 'AIzaSyCF9N6od_VE8MfVh2-FhOaAmqgPCdx4SyM',
 		googleUrl = 'https://vision.googleapis.com/v1/images:annotate?key=' + googleApiKey + "&alt=json",
 		googleReq = new XMLHttpRequest(),
 		// raw request, eventually will be built dynamically with input from UI
@@ -132,6 +213,9 @@ function googleVision(imgURI){
 			if (googleReq.status === 200) {
 				// assign response to resData as JSON and run through processData()
 				resData = JSON.parse(googleReq.response);
+				if(callback !== null || callback !== undefined){
+					callback(resData);
+				}
 				var wholeText = resData.responses[0].textAnnotations[0].description,
 					wholeTextByLine = splitByLineBreak(wholeText);
 				document.getElementById('data').innerHTML = wholeTextByLine;
