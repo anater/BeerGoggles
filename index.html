@@ -8,35 +8,30 @@
 	<link rel="stylesheet" href="https://npmcdn.com/tachyons@4.0.0-beta.12/css/tachyons.min.css">
 	<script src="js/levenshtein.js"></script>
 	<script src="js/site.js"></script>
-	<style type="text/css">
-		.boundingPoly{
-			border: 1px solid red;
-			position: absolute;
-		}
-
-		#preview-container{
-			position: relative;
-		}
-	</style>
 </head>
 <body>
-	<main class="mw7 pa3 center">
-		<h1>Beer Goggles</h1>
-
-		<label for="img-to-scan">
-			Scan a beer menu: <input type="file" name="img-to-scan" id="imgInput" required>
-		</label>
-		<h3>Text from menu:</h3>
-		<div id="preview-container">
-			<img id="file-preview" src="">
-		</div>
-		<p id="data"></p>
-		<!-- <h2>
-			<span id="resultText">1 beer</span> found:
-		</h2>
-		<ul id="resultList">
-			<li id="resultItemTemp"></li>
-		</ul> -->
+	<main class="center tc pa3">
+		<h1 class="f1 tracked-tight mt5">Beer Goggles</h1>
+        <p class="f4 lh-copy mt5">
+            Snap a photo of a beer menu.<br>
+            Scan to learn more about the beers.<br>
+            Enjoy an informed beer choice.
+        </p>
+        <a class="db mt5 ttu tracked b w-100 bg-white pa2 ba bw1 b--black border-box link" href="preview.html">
+            Scan a menu
+        </a>
+		<!-- <label class="db mt5" for="img-to-scan">
+			Scan a menu: <input class="o-0" type="file" name="img-to-scan" id="imgInput" required>
+		</label> -->
+        <div class="f6 lh-copy mt5">
+            <p>
+                <span class="db b">For best results:</span>
+                Try to fit 10 beers (max) per photo.<br>
+                Make sure the menu is well-lit.<br>
+                Drink responsibly.
+            </p>
+        </div>
+        <a class="db f6 mt5 tracked-mega b ttu no-underline link" href="http://andrewnater.com">Built by Andrew Nater</a>
 	</main>
 
 	<script type="text/javascript">
@@ -65,10 +60,37 @@
 
 		    	document.getElementById("file-preview").src = result;
 
-		    	googleVision(cleanResult.toString(), function(data){
-		    		var scannedText = data.responses[0].textAnnotations[0].description,
-		    			annotations = data.responses[0].textAnnotations,
-		    			distances = [];
+		    	googleVision(cleanResult.toString(), function(res){
+                    var wholeText = res.responses[0].textAnnotations[0].description,
+                        wholeTextByLine = splitByLineBreak(alphaNum(wholeText)),
+                        finalText = [];
+                    for(var i = 0; i < wholeTextByLine.length; i++){
+                        var line = wholeTextByLine[i];
+                        if(line.length > 5 && line.length < 50){
+                            finalText.push(line);
+                        }
+                    }
+                    console.log(finalText);
+                    document.getElementById('data').innerHTML = finalText;
+
+                    for (var i = 0; i < finalText.length; i++) {
+                        breweryDbSearch(finalText[i], function(res, query){
+                            if(res.status === 'success'){
+                                console.log(query + ' search SUCCESS');
+                                for (var i = 0; i < 5; i++) {
+                                    var result = res.data[i],
+                                        brewery = result.breweries[0].nameShortDisplay,
+                                        beer = result.nameDisplay;
+                                    console.log(brewery + ' ' + beer);
+                                }
+                            }
+                        });
+                    }
+
+
+		    		// var scannedText = data.responses[0].textAnnotations[0].description,
+		    		// 	annotations = data.responses[0].textAnnotations,
+		    		// 	distances = [];
 
 		    		// for (var i = 0; i < annotations.length; i++) {
 		    		// 	var vertices = annotations[i].boundingPoly.vertices,
@@ -114,8 +136,8 @@
                     //
 		    		// console.log(average);
 
-		    		sessionStorage.setItem('scannedText', scannedText);
-		    		loadBeerStore(findBeersInText);
+		    		// sessionStorage.setItem('scannedText', scannedText);
+		    		// loadBeerStore(findBeersInText);
 		    	});
 		    };
 		    reader.readAsDataURL(file); // broken in iOS8 && Safari

@@ -128,6 +128,12 @@ function splitByLineBreak(text){
 	return splitText;
 }
 
+function alphaNum(text){
+    var noPrice = text.replace(/\$\S+/g, ''),
+        nothingElse = noPrice.replace(/[^\w\s]/gi, '');
+    return nothingElse;
+}
+
 function breweryDbSearch(query, callback){
 	//console.log(query);
 	var key = 'f2f26c4abe60a3a41cf5c9ee27d9da60',
@@ -141,9 +147,9 @@ function breweryDbSearch(query, callback){
 			// if request has successful status...
 			if (req.status === 200) {
 				res = JSON.parse(req.response);
-				callback(query, res);
+				callback(res, query);
 				//console.log(res);
-				return res;
+				// return res;
 			} else {
 				// error out
 				console.error('Error!');
@@ -216,9 +222,6 @@ function googleVision(imgURI, callback){
 				if(callback !== null || callback !== undefined){
 					callback(resData);
 				}
-				var wholeText = resData.responses[0].textAnnotations[0].description,
-					wholeTextByLine = splitByLineBreak(wholeText);
-				document.getElementById('data').innerHTML = wholeTextByLine;
 			} else {
 				// error out
 				console.error('Error!');
