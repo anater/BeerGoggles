@@ -6,8 +6,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Beer Goggles</title>
 	<link rel="stylesheet" href="https://npmcdn.com/tachyons@4.0.1/css/tachyons.min.css">
-	<script src="js/levenshtein.js"></script>
-	<script src="js/site.js"></script>
+	<!-- <script src="js/levenshtein.js"></script> -->
+    <script src="js/site.js"></script>
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
 
@@ -22,151 +23,146 @@
 </head>
 <body>
 	<main class="center tc pa3">
-		<h1 class="f1 tracked-tight mt5">Beer Goggles</h1>
-        <p class="f4 lh-copy mt5">
-            Snap a photo of a beer menu.<br>
-            Scan to learn more about the beers.<br>
-            Enjoy an informed beer choice.
-        </p>
-        <a class="db mt5 ttu tracked b w-100 bg-white pa2 ba bw1 b--black border-box link" href="preview.html">
-            Scan a menu
-        </a>
-		<!-- <label class="db mt5" for="img-to-scan">
-			Scan a menu: <input class="o-0" type="file" name="img-to-scan" id="imgInput" required>
-		</label> -->
-        <div class="f6 lh-copy mt5">
-            <p>
+        <header id="intro">
+    		<h1 class="f1 tracked-tight mt4">Beer Goggles</h1>
+            <p class="f4 lh-copy mt5">
+                Snap a photo of a beer menu.<br>
+                Scan to learn more about the beers.<br>
+                Enjoy an informed beer choice.
+            </p>
+            <p class="f6 lh-copy mt5">
                 <span class="db b">For best results:</span>
                 Try to fit 10 beers (max) per photo.<br>
                 Make sure the menu is well-lit.<br>
                 Drink responsibly.
             </p>
-        </div>
-        <a class="db f6 mt5 tracked-mega b ttu no-underline link" href="http://andrewnater.com">Built by Andrew Nater</a>
+    		<label
+                class="border-box db relative w-100 mt5 bg-gold pa3 ttu tracked b"
+                for="img-to-scan">
+    			Scan a menu
+                <input
+                    id="imgInput"
+                    class="absolute absolute--fill o-0"
+                    type="file"
+                    name="img-to-scan"
+                    required>
+    		</label>
+        </header>
+        <section id="preview" class="dn mt5">
+            <h2 class="f6 b">Using this menu to find beers:</h2>
+            <img
+                id="previewImg"
+                class="db w-100 mt4"
+                src=""
+                alt="Your beer menu picture">
+        </section>
+        <section id="searches" class="dn mt5">
+            <h2 id="searchTotal" class="f6 b">5 Searches</h2>
+            <ul id="searchList" class="list pa0 mt4">
+                <li id="searchItem" class="dn db w-100 ba b--black bw1 mb2">
+                    <div class="pa3 flex justify-between items-center">
+                        <h2 class="searchQuery w-75 ma0 tl f4">Rekorderlig</h2>
+                        <span class="searchResultTotal db w-25 tr f6 light-silver">3 Matches</span>
+                    </div>
+                    <ul id="searchResultList" class="dn list pa0 tl f6">
+                        <li id="searchResultItem" class="db w-100 bt bw1 b--black-10">
+                            <div class="pa3 tl">
+                                <h4 class="searchResultBeer w-75 ma0 mb1">Rekorderlig Krusbär (Gooseberry)</h4>
+                                <span class="searchResultABV b">4.5%</span> |
+                                <span class="searchResultStyle">Common Cider</span> |
+                                <span class="searchResultBrewery">Åbro Bryggeri</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+        <footer>
+            <a
+                class="db mt5 gold ttu tracked-mega b f6 lh-copy"
+                href="http://andrewnater.com">
+                Design & Developed by Andrew Nater
+            </a>
+        </footer>
 	</main>
-
 	<script type="text/javascript">
 		// grab some DOM
 		var imgInput = document.getElementById('imgInput'),
-			resultText = document.getElementById('resultText'),
-			resultList = document.getElementById('resultList'),
-			resultItemTemp = document.getElementById('resultItemTemp');
-		// set aside for beer results
-		var beers = [];
-		//loadBeerStore();
+            preview = document.getElementById('preview'),
+            previewImg = document.getElementById('previewImg');
+
 		imgInput.addEventListener('change', handleFileSelect, false);
 
-		function handleFileSelect(evt) {
-		    var fileList = evt.target.files;
-		    for (var i = 0; i < fileList.length; i++) {
-		        loadFile(fileList[i]);
+		function handleFileSelect(e) {
+		    for (var i = 0; i < e.target.files.length; i++) {
+		        loadFile(e.target.files[i]);
 		    }
 		}
 
 		function loadFile(file) {
 		    var reader = new FileReader();
-		    reader.onload = function (evt) {
-		    	var result = evt.target.result,
-		    		cleanResult = result.replace(/data:image\/jpeg;base64,/, "");
+		    reader.onload = function (e) {
+		    	var result = e.target.result,
+                    cleanResult = result.replace(/data:image\/jpeg;base64,/, "");
 
-		    	document.getElementById("file-preview").src = result;
-
-		    	googleVision(cleanResult.toString(), function(res){
-                    var wholeText = res.responses[0].textAnnotations[0].description,
-                        wholeTextByLine = splitByLineBreak(alphaNum(wholeText)),
-                        finalText = [];
-                    for(var i = 0; i < wholeTextByLine.length; i++){
-                        var line = wholeTextByLine[i];
-                        if(line.length > 5 && line.length < 50){
-                            finalText.push(line);
-                        }
-                    }
-                    console.log(finalText);
-                    document.getElementById('data').innerHTML = finalText;
-
-                    for (var i = 0; i < finalText.length; i++) {
-                        breweryDbSearch(finalText[i], function(res, query){
-                            if(res.status === 'success'){
-                                console.log(query + ' search SUCCESS');
-                                for (var i = 0; i < 5; i++) {
-                                    var result = res.data[i],
-                                        brewery = result.breweries[0].nameShortDisplay,
-                                        beer = result.nameDisplay;
-                                    console.log(brewery + ' ' + beer);
-                                }
-                            }
-                        });
-                    }
-
-
-		    		// var scannedText = data.responses[0].textAnnotations[0].description,
-		    		// 	annotations = data.responses[0].textAnnotations,
-		    		// 	distances = [];
-
-		    		// for (var i = 0; i < annotations.length; i++) {
-		    		// 	var vertices = annotations[i].boundingPoly.vertices,
-		    		// 		description = annotations[i].description
-		    		// 		topLeft = vertices[0],
-		    		// 		topRight = vertices[1],
-		    		// 		bottomRight = vertices[2],
-		    		// 		bottomLeft = vertices[3];
-                    //
-		    		// 	createBoundingPoly(
-		    		// 		topLeft.y,
-		    		// 		topLeft.x,
-		    		// 		topRight.x - topLeft.x,
-		    		// 		bottomLeft.y - topLeft.y,
-		    		// 		description
-		    		// 	);
-                    //
-		    		// 	if(i + 1 < annotations.length){
-			    	// 		var a = annotations[i].boundingPoly.vertices,
-			    	// 			aDesc = annotations[i].description,
-                    //
-			    	// 			b = annotations[i + 1].boundingPoly.vertices,
-			    	// 			bDesc = annotations[i + 1].description,
-                    //
-			    	// 			right = a[1].x,
-			    	// 			left = b[0].x,
-			    	// 			distance = left - right;
-                    //
-			    	// 		if(distance > 0){
-			    	// 			console.log('Distance between ' + aDesc + ' and '+ bDesc + ' is ' + distance);
-			    	// 			distances.push(distance);
-			    	// 		}
-			    	// 	}
-		    		// };
-		    		// // console.log(distances);
-		    		// var total = 0,
-		    		// 	average;
-		    		// for (var i = 0; i < distances.length; i++) {
-		    		// 	total += distances[i]
-		    		// };
-		    		// console.log(total);
-		    		// average = total / distances.length;
-                    //
-		    		// console.log(average);
-
-		    		// sessionStorage.setItem('scannedText', scannedText);
-		    		// loadBeerStore(findBeersInText);
-		    	});
-		    };
-		    reader.readAsDataURL(file); // broken in iOS8 && Safari
+                updatePreviewImg(result);
+		    	googleVision(cleanResult.toString(), googleVisionCallback);
+		    }
+		    reader.readAsDataURL(file);
 		}
 
-		function createBoundingPoly(positionTop, positionLeft, width, height, content){
-			var poly = document.createElement('div'),
-				styles = 'top: ' + positionTop + 'px;' +
-			             'left: ' + positionLeft + 'px;' +
-			             'width: ' + width + 'px;' +
-			             'height: ' + height + 'px;';
+        function updatePreviewImg(src){
+            previewImg.src = src;
+            preview.classList.remove('dn');
+        }
 
-			poly.classList.add('boundingPoly');
-			poly.dataset.content = content;
-			poly.setAttribute('style', styles);
+        function googleVisionCallback(res){
+            var wholeText = res.responses[0].textAnnotations[0].description,
+                wholeTextByLine = splitByLineBreak(alphaNum(wholeText)),
+                finalText = [],
+                searchTotal = document.getElementById('searchTotal');
 
-			document.getElementById('preview-container').appendChild(poly);
-		}
+            for(var i = 0; i < wholeTextByLine.length; i++){
+                var line = wholeTextByLine[i];
+                if(line.length > 5 && line.length < 50){
+                    finalText.push(line);
+                }
+            }
+
+            for (var i = 0; i < finalText.length; i++) {
+                breweryDbSearch(finalText[i], searchCallback);
+            }
+
+            searchTotal.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches')
+        }
+
+        function searchCallback(res, query){
+            if(res.status === 'success'){
+                console.log(res);
+                document.getElementById('searches').classList.remove('dn');
+                buildSearchItem(query, res.totalResults);
+            }else{
+                error.log(res);
+            }
+        }
+
+        function buildSearchItem(query, resultTotal){
+            var searchList = document.getElementById('searchList'),
+                searchItemTemplate = document.getElementById('searchItem'),
+                search = searchItemTemplate.cloneNode(true),
+                searchQuery = search.querySelector('.searchQuery'),
+                searchResultTotal = search.querySelector('.searchResultTotal');
+            // remove #searchItem selector
+            search.removeAttribute('id');
+            // update text content with arguments
+            searchQuery.textContent = query;
+            searchResultTotal.textContent = resultTotal + ' ' + (resultTotal === 1 ? 'Result' : 'Results');
+            // unhide search
+            search.classList.remove('dn');
+            search.classList.add('db');
+            // append to searchList
+            searchList.appendChild(search);
+        }
 	</script>
 </body>
 </html>
