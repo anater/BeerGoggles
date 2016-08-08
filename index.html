@@ -65,7 +65,7 @@
                         <span class="searchResultTotal db w-25 tr f6 light-silver">3 Matches</span>
                     </div>
                     <ul id="searchResultList" class="dn list pa0 tl f6">
-                        <li id="searchResultItem" class="db w-100 bt bw1 b--black-10">
+                        <li class="searchResultItem dn db w-100 bt bw1 b--black-10">
                             <div class="pa3 tl">
                                 <h4 class="searchResultBeer w-75 ma0 mb1">Rekorderlig Krusbär (Gooseberry)</h4>
                                 <span class="searchResultABV b">4.5%</span> |
@@ -89,7 +89,8 @@
 		// grab some DOM
 		var imgInput = document.getElementById('imgInput'),
             preview = document.getElementById('preview'),
-            previewImg = document.getElementById('previewImg');
+            previewImg = document.getElementById('previewImg'),
+            searches = document.getElementById('searches');
 
 		imgInput.addEventListener('change', handleFileSelect, false);
 
@@ -128,27 +129,51 @@
                     finalText.push(line);
                 }
             }
-
+            // run a search for each item in finalText
             for (var i = 0; i < finalText.length; i++) {
                 breweryDbSearch(finalText[i], searchCallback);
             }
-
-            searchTotal.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches')
+            // update searchTotal
+            searchTotal.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches');
+            // reveal searches section
+            searches.classList.remove('dn');
         }
 
         function searchCallback(res, query){
             if(res.status === 'success'){
-                console.log(res);
-                document.getElementById('searches').classList.remove('dn');
-                buildSearchItem(query, res.totalResults);
+                // console.log(res);
+                buildSearchItem(query, res.totalResults, res.data);
             }else{
                 error.log(res);
             }
         }
 
-        function buildSearchItem(query, resultTotal){
+        function buildSearchResultItem(beer, style, abv, brewery, list){
+            console.log(list);
+            var searchResultTemplate = list.querySelector('.searchResultItem'),
+                result = searchResultTemplate.cloneNode(true),
+                resultBeer = result.querySelector('.searchResultBeer'),
+                resultABV = result.querySelector('.searchResultABV'),
+                resultStyle = result.querySelector('.searchResultStyle'),
+                resultBrewery = result.querySelector('.searchResultBrewery');
+            // remove #searchResultItem selector
+            result.removeAttribute('id');
+            // update text with arguments
+            resultBeer.textContent = beer;
+            resultABV.textContent = abv + '%';
+            resultStyle.textContent = style;
+            resultBrewery.textContent = brewery;
+            // reveal result resultStyle
+            result.classList.remove('dn');
+            result.classList.add('db');
+            // return new element
+            return result;
+        }
+
+        function buildSearchItem(query, resultTotal, results){
             var searchList = document.getElementById('searchList'),
                 searchItemTemplate = document.getElementById('searchItem'),
+                searchResultList = document.getElementById('searchResultList'),
                 search = searchItemTemplate.cloneNode(true),
                 searchQuery = search.querySelector('.searchQuery'),
                 searchResultTotal = search.querySelector('.searchResultTotal');
@@ -160,6 +185,18 @@
             // unhide search
             search.classList.remove('dn');
             search.classList.add('db');
+            // populate results
+            for (var i = 0; i < 3; i++) {
+                var r = results[i],
+                    beer = r.nameDisplay ? r.nameDisplay : '',
+                    style = r.style.shortName ? r.style.shortName : '',
+                    abv = r.abv ? r.abv : '',
+                    brewery = r.breweries[0].name ? r.breweries[0].name : '',
+                    result = buildSearchResultItem(beer, style, abv, brewery, searchResultList);
+                console.log(beer, style, abv, brewery);
+                searchResultList.appendChild(result);
+            }
+            searchResultList.removeAttribute('id');
             // append to searchList
             searchList.appendChild(search);
         }

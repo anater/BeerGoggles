@@ -136,23 +136,21 @@ function alphaNum(text){
 
 function breweryDbSearch(query, callback){
 	//console.log(query);
-	var key = 'f2f26c4abe60a3a41cf5c9ee27d9da60',
-		req = new XMLHttpRequest(),
-		url = 'https://api.brewerydb.com/v2/search?q=' + query + '&type=beer&withBreweries=Y&key=' + key,
+	var req = new XMLHttpRequest(),
+		url = 'http://beer-goggles.herokuapp.com/?search=' + query,
 		res;
 
 	req.onreadystatechange = function(){
+        console.log(req);
 		// if request is ready...
 		if (req.readyState === XMLHttpRequest.DONE) {
 			// if request has successful status...
-			if (req.status === 200) {
-				res = JSON.parse(req.response);
+			if (req.status >= 200 && req.status < 400) {
+				res = JSON.parse(req.responseText);
 				callback(res, query);
-				//console.log(res);
-				// return res;
-			} else {
-				// error out
-				console.error('Error!');
+			}
+            else {
+				console.error('Error!', req.responseText);
 			}
 		}
 	}
