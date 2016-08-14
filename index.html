@@ -59,13 +59,12 @@
         <section id="searches" class="dn mt5">
             <h2 id="searchTotal" class="f6 b">5 Searches</h2>
             <ul id="searchList" class="list pa0 mt4">
-                <li id="searchItem" class="dn db w-100 ba b--black bw1 mb2">
+                <li id="searchItem" class="dn w-100 ba b--black bw1 mb2">
                     <div class="pa3 flex justify-between items-center">
                         <h2 class="searchQuery w-75 ma0 tl f4">Rekorderlig</h2>
-                        <span class="searchResultTotal db w-25 tr f6 light-silver">3 Matches</span>
                     </div>
-                    <ul id="searchResultList" class="dn list pa0 tl f6">
-                        <li class="searchResultItem dn db w-100 bt bw1 b--black-10">
+                    <ul id="searchResultList" class="list pa0 tl f6">
+                        <li id="searchResultItem" class="dn w-100 bt bw1 b--black-10">
                             <div class="pa3 tl">
                                 <h4 class="searchResultBeer w-75 ma0 mb1">Rekorderlig Krusbär (Gooseberry)</h4>
                                 <span class="searchResultABV b">4.5%</span> |
@@ -81,7 +80,7 @@
             <a
                 class="db mt5 gold ttu tracked-mega b f6 lh-copy"
                 href="http://andrewnater.com">
-                Design & Developed by Andrew Nater
+                Built by Andrew Nater
             </a>
         </footer>
 	</main>
@@ -125,7 +124,7 @@
 
             for(var i = 0; i < wholeTextByLine.length; i++){
                 var line = wholeTextByLine[i];
-                if(line.length > 5 && line.length < 50){
+                if(line.length > 3 && line.length < 50){
                     finalText.push(line);
                 }
             }
@@ -141,16 +140,49 @@
 
         function searchCallback(res, query){
             if(res.status === 'success'){
-                // console.log(res);
-                buildSearchItem(query, res.totalResults, res.data);
-            }else{
+                buildSearchItem(query, res.data);
+            }
+            else{
                 error.log(res);
             }
         }
 
-        function buildSearchResultItem(beer, style, abv, brewery, list){
-            console.log(list);
-            var searchResultTemplate = list.querySelector('.searchResultItem'),
+        function buildSearchItem(query, results){
+            // console.log('buildSearchItem', query);
+            var searchItemTemp = document.getElementById('searchItem'),
+                search = searchItemTemp.cloneNode(true),
+                searchQuery = search.querySelector('.searchQuery')
+                searchResultList = search.querySelector('#searchResultList');
+
+            // update text content with arguments
+            searchQuery.textContent = query;
+            // populate results
+            for(var i = 0; i < 3; i++){
+                var r = results[i];
+                var beer = returnIfAvailable(r.nameDisplay),
+                    style = '',
+                    abv = returnIfAvailable(r.abv),
+                    brewery = returnIfAvailable(r.breweries[0].name);
+                if(r.style){
+                    style = returnIfAvailable(r.style.shortName);
+                }
+                var result = buildSearchResultItem(beer, style, abv, brewery);
+                // append result to searchResultList
+                searchResultList.appendChild(result);
+            }
+            // remove ids
+            search.removeAttribute('id');
+            searchResultList.removeAttribute('id');
+            // reveal
+            search.classList.remove('dn');
+            search.classList.add('db');
+            // TODO: return item and append where called
+            document.getElementById('searchList').appendChild(search);
+        }
+
+        function buildSearchResultItem(beer, style, abv, brewery){
+            // console.log('buildSearchResultItem', beer);
+            var searchResultTemplate = document.querySelector('#searchResultItem'),
                 result = searchResultTemplate.cloneNode(true),
                 resultBeer = result.querySelector('.searchResultBeer'),
                 resultABV = result.querySelector('.searchResultABV'),
@@ -163,42 +195,25 @@
             resultABV.textContent = abv + '%';
             resultStyle.textContent = style;
             resultBrewery.textContent = brewery;
-            // reveal result resultStyle
+            // reveal
             result.classList.remove('dn');
             result.classList.add('db');
             // return new element
             return result;
         }
 
-        function buildSearchItem(query, resultTotal, results){
-            var searchList = document.getElementById('searchList'),
-                searchItemTemplate = document.getElementById('searchItem'),
-                searchResultList = document.getElementById('searchResultList'),
-                search = searchItemTemplate.cloneNode(true),
-                searchQuery = search.querySelector('.searchQuery'),
-                searchResultTotal = search.querySelector('.searchResultTotal');
-            // remove #searchItem selector
-            search.removeAttribute('id');
-            // update text content with arguments
-            searchQuery.textContent = query;
-            searchResultTotal.textContent = resultTotal + ' ' + (resultTotal === 1 ? 'Result' : 'Results');
-            // unhide search
-            search.classList.remove('dn');
-            search.classList.add('db');
-            // populate results
-            for (var i = 0; i < 3; i++) {
-                var r = results[i],
-                    beer = r.nameDisplay ? r.nameDisplay : '',
-                    style = r.style.shortName ? r.style.shortName : '',
-                    abv = r.abv ? r.abv : '',
-                    brewery = r.breweries[0].name ? r.breweries[0].name : '',
-                    result = buildSearchResultItem(beer, style, abv, brewery, searchResultList);
-                console.log(beer, style, abv, brewery);
-                searchResultList.appendChild(result);
+        function returnIfAvailable(a){
+            if(typeof a === 'undefined' || a === null){
+                // console.log('Unavailable, sending back a blank string ("")');
+                return '';
+            }else{
+                return a;
             }
-            searchResultList.removeAttribute('id');
-            // append to searchList
-            searchList.appendChild(search);
+        }
+
+        function clearTempElements(){
+            document.querySelector('#searchResultItem').remove();
+            document.querySelector('#searchItem').remove();
         }
 	</script>
 </body>

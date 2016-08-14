@@ -141,7 +141,7 @@ function breweryDbSearch(query, callback){
 		res;
 
 	req.onreadystatechange = function(){
-        console.log(req);
+        // console.log(req);
 		// if request is ready...
 		if (req.readyState === XMLHttpRequest.DONE) {
 			// if request has successful status...
@@ -161,7 +161,7 @@ function breweryDbSearch(query, callback){
 }
 
 function breweryDbGetBrewery(query, callback){
-	//console.log(query);
+	// console.log('sending...', query);
 	var key = 'f2f26c4abe60a3a41cf5c9ee27d9da60',
 		req = new XMLHttpRequest(),
 		url = 'https://api.brewerydb.com/v2/brewery/' + query + '/beers?key=' + key + '&format=json',
