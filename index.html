@@ -22,7 +22,7 @@
     <meta name="theme-color" content="#ffffff">
 </head>
 <body>
-	<main class="center tc pa3">
+	<main class="center tc">
         <header id="intro">
     		<h1 class="f1 tracked-tight mt4">Beer Goggles</h1>
             <p class="f4 lh-copy mt5">
@@ -57,28 +57,12 @@
                 alt="Your beer menu picture">
         </section>
         <section id="searches" class="dn mt5">
-            <h2 id="searchTotal" class="f6 b">5 Searches</h2>
-            <ul id="searchList" class="list pa0 mt4">
-                <li id="searchItem" class="dn w-100 ba b--black bw1 mb2">
-                    <div class="pa3 flex justify-between items-center">
-                        <h2 class="searchQuery w-75 ma0 tl f4">Rekorderlig</h2>
-                    </div>
-                    <ul id="searchResultList" class="list pa0 tl f6">
-                        <li id="searchResultItem" class="dn w-100 bt bw1 b--black-10">
-                            <div class="pa3 tl">
-                                <h4 class="searchResultBeer w-75 ma0 mb1">Rekorderlig Krusbär (Gooseberry)</h4>
-                                <span class="searchResultABV b">4.5%</span> |
-                                <span class="searchResultStyle">Common Cider</span> |
-                                <span class="searchResultBrewery">Åbro Bryggeri</span>
-                            </div>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
+            <h2 id="console" class="f6 b"></h2>
+            <ul id="searchList" class="list pa0 mt4"></ul>
         </section>
         <footer>
             <a
-                class="db mt5 gold ttu tracked-mega b f6 lh-copy"
+                class="db f6 mv4 tracked-mega ttu no-underline black-30"
                 href="http://andrewnater.com">
                 Built by Andrew Nater
             </a>
@@ -89,7 +73,8 @@
 		var imgInput = document.getElementById('imgInput'),
             preview = document.getElementById('preview'),
             previewImg = document.getElementById('previewImg'),
-            searches = document.getElementById('searches');
+            searches = document.getElementById('searches'),
+            consoleEl = document.getElementById('console');
 
 		imgInput.addEventListener('change', handleFileSelect, false);
 
@@ -106,6 +91,7 @@
                     cleanResult = result.replace(/data:image\/jpeg;base64,/, "");
 
                 updatePreviewImg(result);
+                consoleEl.textContent = 'Scanning Menu...';
 		    	googleVision(cleanResult.toString(), googleVisionCallback);
 		    }
 		    reader.readAsDataURL(file);
@@ -119,87 +105,125 @@
         function googleVisionCallback(res){
             var wholeText = res.responses[0].textAnnotations[0].description,
                 wholeTextByLine = splitByLineBreak(alphaNum(wholeText)),
-                finalText = [],
-                searchTotal = document.getElementById('searchTotal');
-
+                finalText = [];
+            // update searchTotal
+            consoleEl.textContent = 'Searching for beers...';
             for(var i = 0; i < wholeTextByLine.length; i++){
                 var line = wholeTextByLine[i];
-                if(line.length > 3 && line.length < 50){
+                if(line.length >= 3 && line.length <= 25){
                     finalText.push(line);
                 }
             }
             // run a search for each item in finalText
             for (var i = 0; i < finalText.length; i++) {
+            // for (var i = 0; i < 3; i++) { // FOR TESTING
                 breweryDbSearch(finalText[i], searchCallback);
+                if(i === finalText.length - 1){
+                    consoleEl.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches');
+                    // consoleEl.textContent = 'Results';
+                }
             }
-            // update searchTotal
-            searchTotal.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches');
             // reveal searches section
             searches.classList.remove('dn');
         }
 
         function searchCallback(res, query){
             if(res.status === 'success'){
-                buildSearchItem(query, res.data);
+                // buildSearchItem(query, res.data);
+                buildSearch(query, res.data);
             }
             else{
                 error.log(res);
             }
         }
 
-        function buildSearchItem(query, results){
-            // console.log('buildSearchItem', query);
-            var searchItemTemp = document.getElementById('searchItem'),
-                search = searchItemTemp.cloneNode(true),
-                searchQuery = search.querySelector('.searchQuery')
-                searchResultList = search.querySelector('#searchResultList');
+        function buildSearch(query, results){
+            if(results){
+                var search = createEl('li', 'db w-100 mb3 lh-solid'),
+                    input = createEl('input', 'pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b'),
+                    inputContainer = createEl('div', 'bt bw2 b--black-10'),
+                    resultList = createEl('ul', 'list pa0 cf db tl f6');
 
-            // update text content with arguments
-            searchQuery.textContent = query;
-            // populate results
-            for(var i = 0; i < 3; i++){
-                var r = results[i];
-                var beer = returnIfAvailable(r.nameDisplay),
-                    style = '',
-                    abv = returnIfAvailable(r.abv),
-                    brewery = returnIfAvailable(r.breweries[0].name);
-                if(r.style){
-                    style = returnIfAvailable(r.style.shortName);
+                input.type = 'search';
+                input.placeholder = input.value = query;
+                inputContainer.appendChild(input);
+
+                for (var i = 0; i < 3; i++) {
+                    if(results && results[i]){
+                        var r = results[i],
+                            beerName = returnIfAvailable(r.nameDisplay),
+                            abv = returnIfAvailable(r.abv),
+                            breweryName = returnIfAvailable(r.breweries[0].name),
+                            style = '',
+                            resultEl;
+
+                        if(r.style){
+                            style = returnIfAvailable(r.style.shortName);
+                        }
+
+                        resultEl = buildResult(breweryName, beerName, abv, style);
+
+                        if(i === 2){
+                            resultEl.classList.add('mb3');
+                        }
+
+                        resultList.appendChild(resultEl);
+                    }
+                    else{
+                        console.log('No results for: ' + query);
+                    }
                 }
-                var result = buildSearchResultItem(beer, style, abv, brewery);
-                // append result to searchResultList
-                searchResultList.appendChild(result);
+
+                search.appendChild(inputContainer);
+                search.appendChild(resultList);
+                // append to list
+                document.querySelector('#searchList').appendChild(search);
             }
-            // remove ids
-            search.removeAttribute('id');
-            searchResultList.removeAttribute('id');
-            // reveal
-            search.classList.remove('dn');
-            search.classList.add('db');
-            // TODO: return item and append where called
-            document.getElementById('searchList').appendChild(search);
         }
 
-        function buildSearchResultItem(beer, style, abv, brewery){
-            // console.log('buildSearchResultItem', beer);
-            var searchResultTemplate = document.querySelector('#searchResultItem'),
-                result = searchResultTemplate.cloneNode(true),
-                resultBeer = result.querySelector('.searchResultBeer'),
-                resultABV = result.querySelector('.searchResultABV'),
-                resultStyle = result.querySelector('.searchResultStyle'),
-                resultBrewery = result.querySelector('.searchResultBrewery');
-            // remove #searchResultItem selector
-            result.removeAttribute('id');
-            // update text with arguments
-            resultBeer.textContent = beer;
-            resultABV.textContent = abv + '%';
-            resultStyle.textContent = style;
-            resultBrewery.textContent = brewery;
-            // reveal
-            result.classList.remove('dn');
-            result.classList.add('db');
-            // return new element
+        function buildResult(brewery, beer, abv, style){
+            var result = createEl('li', 'db w-100'),
+                container = createEl('div', 'pa3'),
+                breweryEl = createEl('span', 'db mb2'),
+                beerEl = createEl('h4', 'ma0 f4 mb2'),
+                abvEl = createEl('span', 'b'),
+                styleEl = createEl('span'),
+                border = createEl('span', 'bl bw1 pl2 ml2');
+
+            breweryEl.textContent = brewery;
+            container.appendChild(breweryEl);
+
+            beerEl.textContent = beer;
+            container.appendChild(beerEl);
+
+            if(abv.length > 0){
+                abvEl.textContent = abv + '%';
+                container.appendChild(abvEl);
+            }
+
+            if(abv.length > 0 && style.length > 0){
+                container.appendChild(border);
+            }
+
+            if(style.length > 0){
+                styleEl.textContent = style;
+                container.appendChild(styleEl);
+            }
+
+            result.appendChild(container);
+
             return result;
+        }
+
+        function createEl(tag, c){
+            var el = document.createElement(tag);
+            if(c){
+                var cSplit = c.split(' ');
+                for (var i = 0; i < cSplit.length; i++) {
+                    el.classList.add(cSplit[i]);
+                }
+            }
+            return el;
         }
 
         function returnIfAvailable(a){

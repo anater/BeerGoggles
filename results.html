@@ -13,7 +13,7 @@
 	<main class="center tc pv3">
         <span class="f6 ttu tracked-mega black-30">Results</span>
         <ul class="list pa0 mt3">
-            <li class="db w-100 mb3">
+            <li class="db w-100 mb3 lh-solid">
                 <div class="bt bw2 b--black-10">
                     <input
                         class="pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b"
@@ -24,87 +24,9 @@
                 <ul class="list pa0 cf db tl f6">
                     <li class="db w-100">
                         <div class="pa3 br bw3" style="border-color: #7C2529 ;">
+                            <span class="db mb2">North Coast Brewing Company</span>
                             <h4 class="ma0 f4 mb2">Acme California Brown Ale</h4>
-                            <span class="b">5.6%</span> | American-Style Brown Ale
-                            <span class="db">North Coast Brewing Company</span>
-                        </div>
-                    </li>
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #FFC72C ;">
-                            <h4 class="ma0 f4 mb2">Acme California IPA</h4>
-                            <span class="b">6.5%</span> | American-Style India Pale Ale
-                            <span class="db">North Coast Brewing Company</span>
-                        </div>
-                    </li>
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #EADA24 ;">
-                            <h4 class="ma0 f4 mb2">Pear Cider</h4>
-                            <span class="b">5%</span> | Fruit Cider
-                            <span class="db">California Cider Company</span>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li class="db w-100 mb3">
-                <div class="bt bw2 b--black-10">
-                    <input
-                        class="pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b"
-                        type="search"
-                        placeholder="Hennepin"
-                        value="Hennepin" />
-                </div>
-                <ul class="list pa0 cf db tl f6">
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #FFC72C;">
-                            <h4 class="ma0 f4 mb2">Hennepin</h4>
-                            <span class="b">7.7%</span> | French & Belgian-Style Saison
-                            <span class="db">Brewery Ommegang</span>
-                        </div>
-                    </li>
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #FFC72C;">
-                            <h4 class="ma0 f4 mb2">Calypso Hennepin</h4>
-                            <span class="b">7.7%</span> | French & Belgian-Style Saison
-                            <span class="db">Brewery Ommegang</span>
-                        </div>
-                    </li>
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #FFC72C;">
-                            <h4 class="ma0 f4 mb2">Motueka Hennepin</h4>
-                            <span class="b">7.7%</span> | French & Belgian-Style Saison
-                            <span class="db">Brewery Ommegang</span>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li class="db w-100 mb3">
-                <div class="bt bw2 b--black-10">
-                    <input
-                        class="pa3 black-30  ma0 b--none w-100 pa0 f3 ttu tracked b"
-                        type="search"
-                        placeholder="Merry Monks"
-                        value="Merry Monks" />
-                </div>
-                <ul class="list pa0 cf db tl f6">
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #FFC72C;">
-                            <h4 class="ma0 f4 mb2">Merry Monks</h4>
-                            <span class="b">9.3%</span> | Belgian-Style Tripel
-                            <span class="db">Weyerbacher Brewing Company</span>
-                        </div>
-                    </li>
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #3F2021;">
-                            <h4 class="ma0 f4 mb2">Monk</h4>
-                            <span class="b">6.2%</span> | Brown Porter
-                            <span class="db">Village Brewery</span>
-                        </div>
-                    </li>
-                    <li class="db w-100">
-                        <div class="pa3 br bw3" style="border-color: #FFC72C;">
-                            <h4 class="ma0 f4 mb2">Merry Christmas</h4>
-                            <span class="b">7.9%</span> | Herb and Spice Beer
-                            <span class="db">5 Stones Artisan Brewery</span>
+                            <span class="b br bw1 pr2 mr2">5.6%</span><span>American-Style Brown Ale</span>
                         </div>
                     </li>
                 </ul>
@@ -115,4 +37,65 @@
         </a>
 	</main>
 </body>
+<script>
+    buildSearch('Acme California', ['1','','']);
+
+    function buildSearch(query, results){
+        var search = createEl('li', 'db w-100 mb3 lh-solid'),
+            input = createEl('input', 'pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b'),
+            inputContainer = createEl('div', 'bt bw2 b--black-10'),
+            resultList = createEl('ul', 'list pa0 cf db tl f6');
+
+        input.type = 'search';
+        input.placeholder = input.value = query;
+        inputContainer.appendChild(input);
+
+        for (var i = 0; i < results.length; i++) {
+            var r = results[i],
+                resultEl = buildResult('North Coast Brewing Company', 'Acme California Brown Ale', '5.6%', 'American-Style Brown Ale');
+            resultList.appendChild(resultEl);
+        }
+
+        search.appendChild(inputContainer);
+        search.appendChild(resultList);
+        // append to list
+        document.querySelector('ul.list').appendChild(search);
+    }
+
+    function buildResult(brewery, beer, abv, style){
+        var result = createEl('li', 'db w-100'),
+            container = createEl('div', 'pa3 br bw3'),
+            breweryEl = createEl('span', 'db mb2'),
+            beerEl = createEl('h4', 'ma0 f4 mb2'),
+            abvEl = createEl('span', 'b'),
+            styleEl = createEl('span', 'bl bw1 pl2 ml2');
+
+        breweryEl.textContent = brewery;
+        container.appendChild(breweryEl);
+
+        beerEl.textContent = beer;
+        container.appendChild(beerEl);
+
+        abvEl.textContent = abv;
+        container.appendChild(abvEl);
+
+        styleEl.textContent = style;
+        container.appendChild(styleEl);
+
+        result.appendChild(container);
+
+        return result;
+    }
+
+    function createEl(tag, c){
+        var el = document.createElement(tag);
+        if(c){
+            var cSplit = c.split(' ');
+            for (var i = 0; i < cSplit.length; i++) {
+                el.classList.add(cSplit[i]);
+            }
+        }
+        return el;
+    }
+</script>
 </html>
