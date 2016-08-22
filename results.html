@@ -8,15 +8,24 @@
 	<link rel="stylesheet" href="https://npmcdn.com/tachyons@4.0.1/css/tachyons.min.css">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        .fill-gray{
+            fill: rgba(0,0,0,.3);
+        }
+        .outline-0{
+            outline: none;
+        }
+    </style>
 </head>
 <body class="sans-serif">
 	<main class="center tc pv3">
         <span class="f6 ttu tracked-mega black-30">Results</span>
         <ul class="list pa0 mt3">
             <li class="db w-100 mb3 lh-solid">
-                <div class="bt bw2 b--black-10">
+                <div class="bt bw2 b--black-10 flex flex-row justify-between items-center">
+                    <svg id="searchIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="fill-gray w1 ml3"><g><path d="M11.08,6.77a4.15,4.15,0,0,0-1.26-3,4.15,4.15,0,0,0-3-1.26,4.15,4.15,0,0,0-3,1.26,4.15,4.15,0,0,0-1.26,3,4.15,4.15,0,0,0,1.26,3,4.15,4.15,0,0,0,3,1.26,4.15,4.15,0,0,0,3-1.26,4.15,4.15,0,0,0,1.26-3Zm4.92,8A1.25,1.25,0,0,1,14.77,16a1.14,1.14,0,0,1-.87-.37l-3.3-3.29a6.58,6.58,0,0,1-3.84,1.19A6.65,6.65,0,0,1,4.14,13,6.63,6.63,0,0,1,.53,9.4a6.75,6.75,0,0,1,0-5.26A6.63,6.63,0,0,1,4.14.53,6.75,6.75,0,0,1,9.4.53,6.63,6.63,0,0,1,13,4.14a6.65,6.65,0,0,1,.53,2.63,6.58,6.58,0,0,1-1.19,3.84l3.3,3.3a1.18,1.18,0,0,1,.36.87Z"/></g></svg>
                     <input
-                        class="pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b"
+                        class="input-reset pv3 pl3 black-30 ma0 b--none w-100 pa0 f4 ttu tracked b"
                         type="search"
                         placeholder="Acme California"
                         value="Acme California" />
@@ -42,12 +51,14 @@
 
     function buildSearch(query, results){
         var search = createEl('li', 'db w-100 mb3 lh-solid'),
-            input = createEl('input', 'pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b'),
-            inputContainer = createEl('div', 'bt bw2 b--black-10'),
+            input = createEl('input', 'input-reset outline-0 pv3 pl3 black-30 ma0 b--none w-100 pa0 f4 ttu tracked b'),
+            searchIcon = document.getElementById('searchIcon').cloneNode(true);
+            inputContainer = createEl('div', 'bt bw2 b--black-10 flex flex-row justify-between items-center'),
             resultList = createEl('ul', 'list pa0 cf db tl f6');
 
         input.type = 'search';
         input.placeholder = input.value = query;
+        inputContainer.appendChild(searchIcon);
         inputContainer.appendChild(input);
 
         for (var i = 0; i < results.length; i++) {

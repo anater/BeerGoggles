@@ -20,6 +20,14 @@
     <link rel="shortcut icon" href="img/favicon/favicon.ico">
     <meta name="msapplication-config" content="img/favicon/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
+    <style>
+        .fill-gray{
+            fill: rgba(0,0,0,.3);
+        }
+        .outline-0{
+            outline: none;
+        }
+    </style>
 </head>
 <body>
 	<main class="center tc">
@@ -57,7 +65,7 @@
                 alt="Your beer menu picture">
         </section>
         <section id="searches" class="dn mt5">
-            <h2 id="console" class="f6 b"></h2>
+            <h2 id="console" class="f6 ma0 b"></h2>
             <ul id="searchList" class="list pa0 mt4"></ul>
         </section>
         <footer>
@@ -67,6 +75,9 @@
                 Built by Andrew Nater
             </a>
         </footer>
+        <div class="dn" id="icons">
+            <svg id="searchIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g><path d="M11.08,6.77a4.15,4.15,0,0,0-1.26-3,4.15,4.15,0,0,0-3-1.26,4.15,4.15,0,0,0-3,1.26,4.15,4.15,0,0,0-1.26,3,4.15,4.15,0,0,0,1.26,3,4.15,4.15,0,0,0,3,1.26,4.15,4.15,0,0,0,3-1.26,4.15,4.15,0,0,0,1.26-3Zm4.92,8A1.25,1.25,0,0,1,14.77,16a1.14,1.14,0,0,1-.87-.37l-3.3-3.29a6.58,6.58,0,0,1-3.84,1.19A6.65,6.65,0,0,1,4.14,13,6.63,6.63,0,0,1,.53,9.4a6.75,6.75,0,0,1,0-5.26A6.63,6.63,0,0,1,4.14.53,6.75,6.75,0,0,1,9.4.53,6.63,6.63,0,0,1,13,4.14a6.65,6.65,0,0,1,.53,2.63,6.58,6.58,0,0,1-1.19,3.84l3.3,3.3a1.18,1.18,0,0,1,.36.87Z"/></g></svg>
+        </div>
 	</main>
 	<script type="text/javascript">
 		// grab some DOM
@@ -89,8 +100,10 @@
 		    reader.onload = function (e) {
 		    	var result = e.target.result,
                     cleanResult = result.replace(/data:image\/jpeg;base64,/, "");
-
                 updatePreviewImg(result);
+                // reveal searches section
+                searches.classList.remove('dn');
+                // update console text
                 consoleEl.textContent = 'Scanning Menu...';
 		    	googleVision(cleanResult.toString(), googleVisionCallback);
 		    }
@@ -110,7 +123,7 @@
             consoleEl.textContent = 'Searching for beers...';
             for(var i = 0; i < wholeTextByLine.length; i++){
                 var line = wholeTextByLine[i];
-                if(line.length >= 3 && line.length <= 25){
+                if(line.length >= 3 && line.length <= 50){
                     finalText.push(line);
                 }
             }
@@ -120,32 +133,36 @@
                 breweryDbSearch(finalText[i], searchCallback);
                 if(i === finalText.length - 1){
                     consoleEl.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches');
-                    // consoleEl.textContent = 'Results';
                 }
             }
-            // reveal searches section
-            searches.classList.remove('dn');
         }
 
         function searchCallback(res, query){
-            if(res.status === 'success'){
-                // buildSearchItem(query, res.data);
-                buildSearch(query, res.data);
+            if(res.status === 'success' && res.data){
+                var searchEl = buildSearch(query, res.data);
+                document.getElementById('searchList').appendChild(searchEl);
             }
             else{
-                error.log(res);
+                console.error(res);
             }
         }
 
         function buildSearch(query, results){
             if(results){
-                var search = createEl('li', 'db w-100 mb3 lh-solid'),
-                    input = createEl('input', 'pa3 black-30 ma0 b--none w-100 pa0 f3 ttu tracked b'),
-                    inputContainer = createEl('div', 'bt bw2 b--black-10'),
+                var search = createEl('li', 'db w-100 lh-solid'),
+                    input = createEl('input', 'input-reset outline-0 pv3 pl3 black-30 ma0 b--none w-100 pa0 f5 ttu tracked b'),
+                    searchIcon = document.getElementById('searchIcon').cloneNode(true);
+                    inputContainer = createEl('div', 'bt bw2 b--black-10 flex flex-row justify-between items-center'),
                     resultList = createEl('ul', 'list pa0 cf db tl f6');
-
+                // update input attributes
                 input.type = 'search';
                 input.placeholder = input.value = query;
+                // add change listener to input
+                input.addEventListener('change', handleSearchChange);
+                // update search icon classes
+                searchIcon.classList.add('fill-gray', 'w1', 'ml3');
+                // append input and searchIcon to inputContainer
+                inputContainer.appendChild(searchIcon);
                 inputContainer.appendChild(input);
 
                 for (var i = 0; i < 3; i++) {
@@ -177,7 +194,31 @@
                 search.appendChild(inputContainer);
                 search.appendChild(resultList);
                 // append to list
-                document.querySelector('#searchList').appendChild(search);
+                return search;
+            }
+        }
+
+        function handleSearchChange(ev){
+            var searchEl = ev.target,
+                val = searchEl.value,
+                searchParent = searchEl.parentNode.parentNode,
+                searchList = document.getElementById('searchList');
+
+            if(val.length > 0){
+                breweryDbSearch(val, function(res, query){
+                    if(res.status === 'success' && res.data){
+                        var newSearchEl = buildSearch(query, res.data);
+                        searchList.insertBefore(newSearchEl, searchParent);
+                        searchParent.remove();
+                    }
+                    else{
+                        // TODO: return error state
+                        console.error(res);
+                    }
+                });
+                // TODO: replace this searchParent's results list with loading state
+            }else{
+                searchParent.remove();
             }
         }
 
