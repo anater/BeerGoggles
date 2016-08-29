@@ -24,8 +24,22 @@
         .fill-gray{
             fill: rgba(0,0,0,.3);
         }
+
+        .animate--pulsate{
+            animation-name: pulsate;
+            animation-duration: 1s;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+        }
+
         .outline-0{
             outline: none;
+        }
+
+        @keyframes pulsate {
+            0% { opacity: .1; }
+            50% { opacity: .5; }
+            100% { opacity: .1; }
         }
     </style>
 </head>
@@ -105,6 +119,10 @@
                 searches.classList.remove('dn');
                 // update console text
                 consoleEl.textContent = 'Scanning Menu...';
+                // remove error state
+                consoleEl.classList.remove('red');
+                // jump to preview
+                jump('preview');
 		    	googleVision(cleanResult.toString(), googleVisionCallback);
 		    }
 		    reader.readAsDataURL(file);
@@ -116,57 +134,75 @@
         }
 
         function googleVisionCallback(res){
-            var wholeText = res.responses[0].textAnnotations[0].description,
-                wholeTextByLine = splitByLineBreak(alphaNum(wholeText)),
-                finalText = [];
-            // update searchTotal
-            consoleEl.textContent = 'Searching for beers...';
-            for(var i = 0; i < wholeTextByLine.length; i++){
-                var line = wholeTextByLine[i];
-                if(line.length >= 3 && line.length <= 50){
-                    finalText.push(line);
-                }
+            if(res.error){
+                consoleEl.textContent = 'Scanning error occured. Try again.';
+                consoleEl.classList.add('red');
             }
-            // run a search for each item in finalText
-            for (var i = 0; i < finalText.length; i++) {
-            // for (var i = 0; i < 3; i++) { // FOR TESTING
-                breweryDbSearch(finalText[i], searchCallback);
-                if(i === finalText.length - 1){
-                    consoleEl.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches');
+            else{
+                var wholeText = res.responses[0].textAnnotations[0].description,
+                    wholeTextByLine = splitByLineBreak(alphaNum(wholeText)),
+                    finalText = [];
+                // update searchTotal
+                consoleEl.textContent = 'Searching for beers...';
+                for(var i = 0; i < wholeTextByLine.length; i++){
+                    var line = wholeTextByLine[i];
+                    if(line.length >= 3 && line.length <= 50){
+                        finalText.push(line);
+                    }
                 }
+                // run a search for each item in finalText
+                for (var i = 0; i < finalText.length; i++) {
+                // for (var i = 0; i < 5; i++) { // FOR TESTING
+                    breweryDbSearch(finalText[i], searchCallback);
+                    var searchEl = buildSearch(finalText[i]);
+                    searchEl.querySelector('svg').classList.add('animate--pulsate');
+                    document.getElementById('searchList').appendChild(searchEl);
+                }
+                // update console text
+                consoleEl.textContent = finalText.length + ' ' + (finalText.length === 1 ? 'Search' : 'Searches');
+                // jump to searches
+                jump('searches');
             }
         }
 
         function searchCallback(res, query){
+            // grab the previously created search element
+            var oldSearchEl = document.querySelector('[data-query="' + query +'"]');
+            // if the response was successful and has any data...
             if(res.status === 'success' && res.data){
-                var searchEl = buildSearch(query, res.data);
-                document.getElementById('searchList').appendChild(searchEl);
+                // build a new search element and grab the searchList
+                var newSearchEl = buildSearch(query, res.data);
+                    searchList = document.getElementById('searchList');
+                newSearchEl.querySelector('svg').classList.remove('animate--pulsate');
+                // place the new search before the old
+                searchList.insertBefore(newSearchEl, oldSearchEl);
             }
             else{
-                console.error(res);
+                console.error('BreweryDB error on query:', query);
             }
+            // remove the old search element
+            oldSearchEl.remove();
         }
 
         function buildSearch(query, results){
+            var search = createEl('li', 'db w-100 lh-solid'),
+                input = createEl('input', 'input-reset outline-0 pv3 pl3 black-30 ma0 b--none w-100 pa0 f5 ttu tracked b'),
+                searchIcon = document.getElementById('searchIcon').cloneNode(true);
+                inputContainer = createEl('div', 'bt bw2 b--black-10 flex flex-row justify-between items-center'),
+                resultList = createEl('ul', 'list pa0 cf db tl f6');
+            // update input attributes
+            input.type = 'search';
+            input.placeholder = input.value = query;
+            // add change listener to input
+            input.addEventListener('change', handleSearchChange);
+            // update search icon classes
+            searchIcon.classList.add('fill-gray', 'w1', 'ml3');
+            // append input and searchIcon to inputContainer
+            inputContainer.appendChild(searchIcon);
+            inputContainer.appendChild(input);
             if(results){
-                var search = createEl('li', 'db w-100 lh-solid'),
-                    input = createEl('input', 'input-reset outline-0 pv3 pl3 black-30 ma0 b--none w-100 pa0 f5 ttu tracked b'),
-                    searchIcon = document.getElementById('searchIcon').cloneNode(true);
-                    inputContainer = createEl('div', 'bt bw2 b--black-10 flex flex-row justify-between items-center'),
-                    resultList = createEl('ul', 'list pa0 cf db tl f6');
-                // update input attributes
-                input.type = 'search';
-                input.placeholder = input.value = query;
-                // add change listener to input
-                input.addEventListener('change', handleSearchChange);
-                // update search icon classes
-                searchIcon.classList.add('fill-gray', 'w1', 'ml3');
-                // append input and searchIcon to inputContainer
-                inputContainer.appendChild(searchIcon);
-                inputContainer.appendChild(input);
-
                 for (var i = 0; i < 3; i++) {
-                    if(results && results[i]){
+                    if(results[i]){
                         var r = results[i],
                             beerName = returnIfAvailable(r.nameDisplay),
                             abv = returnIfAvailable(r.abv),
@@ -186,16 +222,15 @@
 
                         resultList.appendChild(resultEl);
                     }
-                    else{
-                        console.log('No results for: ' + query);
-                    }
                 }
-
-                search.appendChild(inputContainer);
-                search.appendChild(resultList);
-                // append to list
-                return search;
             }
+            // update search data
+            search.dataset.query = query;
+            // append elements to search
+            search.appendChild(inputContainer);
+            search.appendChild(resultList);
+
+            return search;
         }
 
         function handleSearchChange(ev){
@@ -274,6 +309,13 @@
             }else{
                 return a;
             }
+        }
+
+        function jump(id){
+            console.log(id);
+            var url = location.href;
+            location.href = "#" + id;
+            history.replaceState(null, null, url);
         }
 
         function clearTempElements(){

@@ -188,7 +188,7 @@ function breweryDbGetBrewery(query, callback){
 
 function googleVision(imgURI, callback){
 	// TODO: restrict api key to domain when going public
-	var googleApiKey = 'AIzaSyCF9N6od_VE8MfVh2-FhOaAmqgPCdx4SyM',
+	var googleApiKey = 'AIzaSyAGGlb-1bzMvGhqW9awVbV4xFGyTV-ny3I',
 		googleUrl = 'https://vision.googleapis.com/v1/images:annotate?key=' + googleApiKey + "&alt=json",
 		googleReq = new XMLHttpRequest(),
 		// raw request, eventually will be built dynamically with input from UI
@@ -223,6 +223,7 @@ function googleVision(imgURI, callback){
 			} else {
 				// error out
 				console.error('Error!');
+                callback(JSON.parse(googleReq.response))
 			}
 		}
 	}
