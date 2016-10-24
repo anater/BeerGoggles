@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Beer Goggles - Results</title>
+        <link rel="stylesheet" href="https://npmcdn.com/tachyons@4.0.1/css/tachyons.min.css">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <!-- <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico"> -->
+        <style>
+            /* Reset iOS selection behavior */
+            *{
+                -webkit-tap-highlight-color: rgba(0,0,0,0);
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+            }
+
+            .outline-0{
+                outline: none;
+            }
+
+            .c-marker{
+                padding: 0;
+                border: none;
+                height: 40px;
+                width: 40px;
+                border-radius: 40px;
+                position: absolute;
+                z-index: 9999;
+                box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+                transition: background, transform .2s ease;
+            }
+
+            .c-marker.active{
+                color: black;
+                box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.5);
+                transform: scale(1.1);
+                background-color: rgb(255,255,255);
+            }
+
+            button:active,
+            button:focus{
+                opacity: .6;
+            }
+        </style>
+    </head>
+    <body class="sans-serif fw4 bg-dark-gray fixed w-100 h-100 overflow-hidden">
+        <div id="root"></div>
+        <!--
+          This HTML file is a template.
+          If you open it directly in the browser, you will see an empty page.
+
+          You can add webfonts, meta tags, or analytics to this file.
+          The build step will place the bundled scripts into the <body> tag.
+
+          To begin the development, run `npm start`.
+          To create a production bundle, use `npm run build`.
+        -->
+        <script>
+            window.onload = function(){
+                // freeze viewport
+                document.body.addEventListener(
+                    "touchmove",
+                    function(e) {
+                        e.preventDefault();
+                        console.log('frozen');
+                    },
+                    false
+                );
+            }
+        </script>
+    </body>
+</html>
