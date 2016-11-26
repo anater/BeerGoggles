@@ -26,20 +26,15 @@ class App extends Component {
     constructor(props){
         super(props);
         this.state = {
-            // currentBeer: {
-            //     brewery: 'North Coast Brewing Company',
-            //     name: 'Acme California Brown Ale',
-            //     abv: '5.6%',
-            //     style: 'Brown Ale - American',
-            //     rating: '3.4'
-            // },
             currentBeer: null,
             currentImg: null,
-            imgMarkers: null
+            imgMarkers: null,
+            activeMarker: 0,
+            zoomOrigin: null
         };
     }
 
-    handlePrev = () => console.log('handlePrev')
+    handlePrev = () => this.setState({ })
 
     handleNext = () => console.log('handleNext')
 
@@ -53,7 +48,7 @@ class App extends Component {
             var annotations = res.responses[0].textAnnotations,
                 text = annotations[0].description, // first item is always the entire text
                 textByLine = splitByLineBreak(alphaNum(text)), // TODO: consider another way of breaking the text
-                finalText = []; // gets loaded with lines with 4 - 50 characters
+                finalText = [];
             // loop through textByLine...
             for(var i = 0; i < textByLine.length; i++){
                 // grab trimmed line
@@ -64,31 +59,40 @@ class App extends Component {
                     finalText.push(line);
                 }
             }
-            // loop through finalText
-            let finalAnnotations = finalText.map(line => {
-                let newAnnotation = { description: line };
-                // go through every annotation
-                annotations.forEach(({description, boundingPoly}) => {
-                    let indexOfDescription = line.indexOf(description);
-                    // if there's a match
-                    if(indexOfDescription > 0){
-                        newAnnotation.boundingPoly = boundingPoly
-                        // console.log(description);
-                        console.log('MATCH:', indexOfDescription, line);
-                        // check if there are any coordinates
-                            // update coordinates
-                        // push object with text and coordinates to finalAnnotations ( { description: "", boundingPoly: {} } )
+            // loop through annotations
+            let finalAnnotations = annotations.map(({ description, boundingPoly }, i) => {
+                // set up newAnnotation object
+                let newAnnotation = { coordinates: boundingPoly.vertices[0] };
+                // loop through finalText (not assigning output)
+                finalText.some((line, i) => {
+                    // clean description and grab its index in line
+                    let cleanDescription = alphaNum(description).toUpperCase().trim(),
+                        indexOfDescription = line.toUpperCase().indexOf(cleanDescription);
+                    // if there's a match and the description is greater than 3 characters...
+                    if(indexOfDescription >= 0 && cleanDescription.length > 3){
+                        newAnnotation.description = line;
+                        // clear this line to prevent false matches
+                        finalText[i] = '';
+                        // exit loop
+                        return true;
                     }
                 });
-                return newAnnotation
+                return newAnnotation;
             });
+            // update state with finalAnnotations containing a description
+            this.setState({ imgMarkers: finalAnnotations.filter(annotation => annotation.description) })
+        });
+    }
 
-            console.log('finalAnnotations', finalAnnotations);
-            this.setState({ imgMarkers: finalAnnotations })
+    handleMarkerClick = (id, text, position) => {
+        this.setState({
+            activeMarker: id,
+            zoomOrigin: position
         });
     }
 
     render() {
+        console.log('App State:', this.state);
         return (
         	<main className="center tc measure flex flex-column">
                 { this.state.currentImg
@@ -96,6 +100,9 @@ class App extends Component {
                     ? <ImagePreview
                         img={ this.state.currentImg }
                         markers={ this.state.imgMarkers }
+                        activeMarker={ this.state.activeMarker }
+                        onMarkerClick={ this.handleMarkerClick }
+                        zoomOrigin={ this.state.zoomOrigin }
                     />
                     // otherwise, intro text
                     : (

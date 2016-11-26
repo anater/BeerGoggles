@@ -23,29 +23,41 @@ class ImagePreview extends Component {
     }
 
     render() {
-        // console.log('ImagePreview State:', this.state);
         return (
-            <div className="relative">
-                <img className="mw-100" src={ this.props.img } role="presentation" id="previewImg" />
+            <div
+                className="relative"
+                style={{
+                    transformOrigin: this.props.zoomOrigin,
+                    transform: this.props.zoomOrigin ? 'scale(1.5)' : 'scale(1)',
+                    transition: 'transform, transform-origin 0.3s ease-out'
+                }}
+            >
+                <img
+                    className="mw-100"
+                    src={ this.props.img }
+                    role="presentation"
+                    id="previewImg"
+                />
                 { (this.props.markers && this.state.imgWidth && this.state.imgHeight)
+                    // if we recieved markers and have imgWidth and imgHeight in state...
                     && this.props.markers.map(
-                        (marker, i) => {
-                            // console.log(marker);
-                            if(marker.boundingPoly){
-                                let position = marker.boundingPoly.vertices[0],
-                                    description = marker.description,
-                                    imgWidth = this.state.imgWidth,
-                                    imgHeight = this.state.imgHeight;
-                                return (
-                                    <Marker
-                                        key={ i }
-                                        number={ i }
-                                        title={ description }
-                                        top={ (position.y / imgHeight) * 100  }
-                                        left={ (position.x / imgWidth) * 100 }
-                                    />
-                                )
-                            }
+                        ({coordinates, description}, i) => {
+                            // get proportional distances (as percentage)
+                            let top = (coordinates.y / this.state.imgHeight) * 100,
+                                left = (coordinates.x / this.state.imgWidth) * 100,
+                                isActive = (this.props.activeMarker === i);
+                            // return marker with position and description
+                            return (
+                                <Marker
+                                    key={ i }
+                                    number={ i }
+                                    title={ description }
+                                    top={ top }
+                                    left={ left }
+                                    active={ isActive }
+                                    onClick={ this.props.onMarkerClick }
+                                />
+                            )
                         }
                     )}
             </div>
