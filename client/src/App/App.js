@@ -6,6 +6,7 @@ import ResultNav from '../components/ResultNav';
 import ScanButton from '../components/ScanButton';
 // services
 import GoogleVision from '../services/GoogleVision';
+import Untappd from '../services/Untappd';
 
 function splitByLineBreak(text){
 	//console.log(text);
@@ -38,7 +39,7 @@ class App extends Component {
 
     handleNext = () => console.log('handleNext')
 
-    handleEdit = () => console.log('handleEdit')
+    handleEdit = () => alert('"Editing" is under construction.')
     // updates state with image (URI) and sends to GoogleVision to recieve annotations
     handleScan = (imgURI) => {
         // update state with currentImg
@@ -85,6 +86,24 @@ class App extends Component {
     }
 
     handleMarkerClick = (id, text, position) => {
+        Untappd('search', text, (res) => {
+            // console.log('UNTAPPD CB 1 (SEARCH)', res);
+            let beers = res.response.beers.items,
+                firstBeerId = beers[0].beer.bid;
+            Untappd('info', firstBeerId, (res) => {
+                // console.log('UNTAPPD CB 2 (INFO)', res);
+                let beer = res.response.beer;
+                this.setState({
+                    currentBeer: {
+                        brewery: beer.brewery.brewery_name,
+                        name: beer.beer_name,
+                        abv: beer.beer_abv,
+                        style: beer.beer_style,
+                        rating: parseFloat(beer.rating_score.toString()).toFixed(1)
+                    }
+                })
+            })
+        })
         this.setState({
             activeMarker: id,
             zoomOrigin: position

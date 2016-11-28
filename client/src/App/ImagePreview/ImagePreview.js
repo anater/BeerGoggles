@@ -20,15 +20,23 @@ class ImagePreview extends Component {
                 imgHeight: img.naturalHeight
             })
         }
+        if(prevProps.img !== this.props.img){
+            this.setState({
+                imgWidth: null,
+                imgHeight: null
+            })
+        }
+        // TODO: add check for misplaced markers to update dimensions
     }
 
     render() {
+        console.log('ImagePreview:', this.state.imgWidth, this.state.imgHeight);
         return (
             <div
                 className="relative"
                 style={{
                     transformOrigin: this.props.zoomOrigin,
-                    transform: this.props.zoomOrigin ? 'scale(1.5)' : 'scale(1)',
+                    // transform: this.props.zoomOrigin ? 'scale(1.5)' : 'scale(1)',
                     transition: 'transform, transform-origin 0.3s ease-out'
                 }}
             >
