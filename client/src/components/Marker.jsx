@@ -1,17 +1,18 @@
 import React from 'react';
 
-export default function Marker({ number, title, top, left, active, onClick }){
+export default function Marker({ number, title, top, left, height, width, active, disabled, onClick }){
     return(
         <button
             className={"c-marker bg-yellow black-60 fw7" + (active && ' active')}
+            disabled={ disabled }
             title={ title }
-            onClick={ () => onClick(number, title, `${left}% ${top}%`) }
+            onClick={ (disabled || active) ? null : () => onClick(number, title, { top: top, left: left }) }
             style={ {
-                top: `${ (top >= 3) ? top - 3 : top }%`,
-                left: `${ (left >= 5) ? left - 5 : left }%`
+                top: `${ top }%`,
+                left: `${ left }%`,
+                width: `${ width }%`,
+                height: `${ height }%`
             } }
-        >
-            { number }
-        </button>
+        ></button>
     )
 }

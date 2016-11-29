@@ -14,13 +14,15 @@ class ScanButton extends Component {
     }
 
     render() {
+        let isLoading = this.props.isLoading;
         return (
-            <label className="border-box db relative w-100 bg-gold pa3 ttu tracked b fw9">
-    			Scan a menu
+            <label className={`border-box db relative w-100 pa3 ttu tracked b fw9 ${ isLoading ? 'bg-gray white' : 'bg-gold'}`}>
+    			{ isLoading ? 'Loading...' : 'Scan a menu'}
                 <input
                     type="file"
                     className="absolute absolute--fill o-0"
                     onChange={ this.handleInputChange }
+                    disabled={ isLoading }
                 />
     		</label>
         )

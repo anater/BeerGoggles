@@ -25,22 +25,24 @@
             .c-marker{
                 padding: 0;
                 border: none;
-                height: 20px;
-                width: 20px;
-                font-size: 10px;
-                border-radius: 40px;
+                border-radius: .2rem;
                 position: absolute;
-                box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+                transform: skewX(-5deg);
                 transition: background, transform .2s ease;
+                opacity: .6;
             }
 
             .c-marker.active{
-                color: black;
-                box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.5);
-                transform: scale(1.25);
-                background-color: rgb(255,255,255);
-                font-weight: 900;
+                box-shadow: 0px 0px 15px rgba(0, 0, 0, .25);
+                transform: scale(1.5) translateY(-5%);
+                background-color: rgba(255, 255, 255, 0.5);
+                border: 1px solid rgba(0, 0, 0, .25);
                 z-index: 9999;
+            }
+
+            .c-marker:disabled{
+                background-color: red;
+                opacity: .4;
             }
         </style>
     </head>

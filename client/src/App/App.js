@@ -30,8 +30,9 @@ class App extends Component {
             currentBeer: null,
             currentImg: null,
             imgMarkers: null,
-            activeMarker: 0,
-            zoomOrigin: null
+            activeMarker: null,
+            zoomOrigin: null,
+            isLoading: false
         };
     }
 
@@ -42,8 +43,11 @@ class App extends Component {
     handleEdit = () => alert('"Editing" is under construction.')
     // updates state with image (URI) and sends to GoogleVision to recieve annotations
     handleScan = (imgURI) => {
-        // update state with currentImg
-        this.setState({ currentImg: imgURI });
+        // update state with currentImg and loading status
+        this.setState({
+            currentImg: imgURI,
+            isLoading: true
+        });
         // send imgURI to GoogleVision and update state markers with annotations in response
         GoogleVision(imgURI, res => {
             var annotations = res.responses[0].textAnnotations,
@@ -63,7 +67,7 @@ class App extends Component {
             // loop through annotations
             let finalAnnotations = annotations.map(({ description, boundingPoly }, i) => {
                 // set up newAnnotation object
-                let newAnnotation = { coordinates: boundingPoly.vertices[0] };
+                let newAnnotation = { coordinates: [boundingPoly.vertices[0], boundingPoly.vertices[2]] };
                 // loop through finalText (not assigning output)
                 finalText.some((line, i) => {
                     // clean description and grab its index in line
@@ -81,32 +85,55 @@ class App extends Component {
                 return newAnnotation;
             });
             // update state with finalAnnotations containing a description
-            this.setState({ imgMarkers: finalAnnotations.filter(annotation => annotation.description) })
+            this.setState({
+                imgMarkers: finalAnnotations.filter(annotation => annotation.description),
+                isLoading: false
+            })
         });
     }
 
     handleMarkerClick = (id, text, position) => {
-        Untappd('search', text, (res) => {
-            // console.log('UNTAPPD CB 1 (SEARCH)', res);
-            let beers = res.response.beers.items,
-                firstBeerId = beers[0].beer.bid;
-            Untappd('info', firstBeerId, (res) => {
-                // console.log('UNTAPPD CB 2 (INFO)', res);
-                let beer = res.response.beer;
-                this.setState({
-                    currentBeer: {
-                        brewery: beer.brewery.brewery_name,
-                        name: beer.beer_name,
-                        abv: beer.beer_abv,
-                        style: beer.beer_style,
-                        rating: parseFloat(beer.rating_score.toString()).toFixed(1)
-                    }
+        // search for the beer in Untappd...
+        Untappd('search', text, ({ response }) => {
+            let beers = response.beers.items;
+            console.log(beers);
+            // if we recieved at least one beer in the response...
+            if(beers[0]){
+                // grab the bid from the first beer in the array
+                let firstBeerId = beers[0].beer.bid;
+                // use bid to grab complete metadata (required to show ratings)
+                Untappd('info', firstBeerId, ({ response }) => {
+                    let beer = response.beer;
+                    // update state with beer metadata
+                    this.setState({
+                        isLoading: false,
+                        currentBeer: {
+                            brewery: beer.brewery.brewery_name,
+                            name: beer.beer_name,
+                            abv: beer.beer_abv,
+                            style: beer.beer_style,
+                            rating: parseFloat(beer.rating_score.toString()).toFixed(1) // to create single decimal numbers
+                        }
+                    })
                 })
-            })
+            } else {
+                let markers = [].concat(this.state.imgMarkers), // new array
+                    marker = markers[id];
+                // add disabled property
+                marker.disabled = true;
+                // console.log(marker, this.state.imgMarkers[id]);
+                this.setState({
+                    isLoading: false,
+                    imgMarkers: markers,
+                    activeMarker: null
+                })
+            }
         })
         this.setState({
             activeMarker: id,
-            zoomOrigin: position
+            zoomOrigin: position,
+            currentBeer: null,
+            isLoading: true
         });
     }
 
@@ -147,22 +174,15 @@ class App extends Component {
                 }
                 <div className="fixed bottom-0 left-0 right-0 shadow-2">
                     { this.state.currentBeer && (
-                        <div>
-                            <ResultNav
-                                onPrev={ this.handlePrev }
-                                onNext={ this.handleNext }
-                                onEdit={ this.handleEdit }
-                            />
-                            <Result
-                                brewery={ this.state.currentBeer.brewery }
-                                name={ this.state.currentBeer.name }
-                                abv={ this.state.currentBeer.abv }
-                                style={ this.state.currentBeer.style }
-                                rating={ this.state.currentBeer.rating }
-                            />
-                        </div>
+                        <Result
+                            brewery={ this.state.currentBeer.brewery }
+                            name={ this.state.currentBeer.name }
+                            abv={ this.state.currentBeer.abv }
+                            style={ this.state.currentBeer.style }
+                            rating={ this.state.currentBeer.rating }
+                        />
                     )}
-                    <ScanButton onChange={ this.handleScan } />
+                    <ScanButton onChange={ this.handleScan } isLoading={ this.state.isLoading } />
                 </div>
         	</main>
         );

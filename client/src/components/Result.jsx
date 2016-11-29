@@ -13,7 +13,7 @@ export default function Result({ brewery, name, abv, style, rating, tastes }){
                     </h4>
                     <div className="o-70">
                         <span className="br pr2 mr2 b--white-50">
-                            { abv }
+                            { `${abv}%` }
                         </span>
                         <span>
                             { style }
